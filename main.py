@@ -53,9 +53,6 @@ class Board:
 
 
 class GameController:
-    def __init__(self):
-        pass
-
     @staticmethod
     def GeneratePieces(board: Board):
         posy = 0
@@ -65,7 +62,7 @@ class GameController:
 
         posy = 0
         for space in range(board.width):
-            Pieces.append(CheckersPiece(board.width - posy -1, space, board.boxWidth, (board.xoffset, board.yoffset), PIECE_COLORS[0]))
+            Pieces.append(CheckersPiece(board.width - posy - 1, space, board.boxWidth, (board.xoffset, board.yoffset), PIECE_COLORS[0]))
             posy = abs(posy - 1)
 
 

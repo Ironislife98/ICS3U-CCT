@@ -110,7 +110,8 @@ class CheckersPiece:
 
     def gracefulExit(self):
         try:
-            self.availableSpots[f"{self.pos.x}{self.pos.y}"]
+            if (self.pos.x, self.pos.y) in self.availableSpots[f"{self.pos.x}{self.pos.y}"]:
+                pass
             print(self.availableSpots[f"{self.pos.x}{self.pos.y}"])
         except KeyError:
             self.pos = self.startpos

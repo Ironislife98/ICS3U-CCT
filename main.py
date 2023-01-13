@@ -3,6 +3,7 @@ from pygame.math import Vector2
 import sys
 import math
 import threading
+import time
 
 pygame.init()
 
@@ -72,6 +73,7 @@ class GameController:
     def CheckDrag(mousepos: pygame.Vector2):
         for piece in Pieces:
             if piece.rect.collidepoint(mousepos.x, mousepos.y):
+                piece.genPositions()
                 piece.dragging = True
 
 
@@ -88,7 +90,7 @@ class CheckersPiece:
         self.dragoffsets = [2, 2]     # Offsets are in rows and columns
         self.dragging = False
         self.startpos = pygame.math.Vector2()
-        self.availableSpots = {}
+        self.availableSpots = []
 
         Pieces.append(self)
 
@@ -104,17 +106,18 @@ class CheckersPiece:
 
         return (middlex, middley)
 
-    def calculateAvailableSpots(self):
-        if self.color == PIECE_COLORS[0] and not self.dragging:
-            self.availableSpots[f"{self.pos.x}{self.pos.y}"] = [(self.pos.x - 1, self.pos.y - 1), (self.pos.x + 1, self.pos.y  - 1)]
+    def genPositions(self):
+        upleft = pygame.Vector2(self.startpos.x - 1, self.startpos.y - 1)
+        upright = pygame.Vector2(self.startpos.x + 1, self.startpos.y - 1)
+        self.availableSpots = [upleft.xy, upright.xy]
+        print(self.availableSpots)
 
-    def gracefulExit(self):
-        try:
-            if (self.pos.x, self.pos.y) in self.availableSpots[f"{self.pos.x}{self.pos.y}"]:
-                pass
-            print(self.availableSpots[f"{self.pos.x}{self.pos.y}"])
-        except KeyError:
-            self.pos = self.startpos
+    def checkPosition(self):
+        if self.pos.x in (self.startpos.x - 1, self.startpos.x + 1):
+            if self.pos.y in (self.startpos.y - 1):
+                print("Valid move")
+        else:
+            self.pos.xy = self.startpos.xy
 
     def draw(self):
         middles = self.getMiddle()
@@ -154,12 +157,11 @@ while run:
                 GameController.CheckDrag(pygame.Vector2(pygame.mouse.get_pos()))
         if event.type == pygame.MOUSEBUTTONUP:
             for piece in Pieces:
+                piece.checkPosition()
                 piece.dragging = False
-                piece.gracefulExit()
 
     for piece in Pieces:
         piece.handleDrag()
-        piece.calculateAvailableSpots()
 
     drawObjects(win)
 

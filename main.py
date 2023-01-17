@@ -138,11 +138,11 @@ class ScoreBoard:
         self.Player2 = OutlinedText("Player 2", (590, 760), 3, 35, win, foreground_color=PIECE_COLORS[0], background_color=(0, 128, 0))
         self.Player2Pos: Vector2 = pygame.math.Vector2(620, 760)
 
-        self.playertexts: tuple[OutlinedText, OutlinedText] = (self.Player1, self.Player2)
+        self.playertexts: tuple[OutlinedText, OutlinedText] = (self.Player2, self.Player1)
         self.selected: int = 0
 
-    def toggleSelected(self):
-        self.selected = abs(self.selected - 1)
+    def changeSelected(self, newSelected: int):
+        self.selected = newSelected
         for text in self.playertexts:
             text.change_outline_color((255, 255, 255))
         self.playertexts[self.selected].change_outline_color((0, 128, 0))
@@ -207,12 +207,14 @@ class SelectedSquare:
         pygame.draw.rect(win, self.color, self.rect)
 
     def detectPress(self, mousepos: Vector2):
+        global selectedSquares, scoreboard
         if self.rect.collidepoint(mousepos.x, mousepos.y):
             self.master.pos = self.pos
             for piece in Pieces:
                 piece.clicked = False
-            scoreboard.toggleSelected()
+            scoreboard.changeSelected(abs(self.master.type - 1))
             selectedSquares = []
+
 
 class GameController:
     @staticmethod
@@ -240,6 +242,7 @@ class CheckersPiece:
         self.stepsize = stepsize
         self.offsets = offsets
         self.color = color
+        self.type = PIECE_COLORS.index(self.color)
         self.radius = radius
         self.rectoffsets = [15, 15] # Offsets are x and y values
         self.rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2), self.pos.y * self.stepsize + self.offsets[1]+ (self.stepsize / 2), self.radius * 2, self.radius * 2)

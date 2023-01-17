@@ -15,6 +15,7 @@ FRAMERATE = 60
 CLOCK = pygame.time.Clock()
 
 Pieces = []
+
 selectedSquares = []
 
 # Font initialization
@@ -132,6 +133,7 @@ class OutlinedText(object):
 
 class ScoreBoard:
     def __init__(self, font: pygame.font.Font):
+        """Initalize the Scoreboard"""
         self.font = font
         self.Player1 = OutlinedText("Player 1", (140, 65), 3, 35, win, foreground_color=PIECE_COLORS[1], background_color=(255, 255, 255))
         self.Player1Pos: Vector2 = pygame.math.Vector2(140, 65)
@@ -142,18 +144,30 @@ class ScoreBoard:
         self.selected: int = 0
 
     def changeSelected(self, newSelected: int):
+        """
+        Changes the selected color
+        :param newSelected: Index of the color from PIECE_COLOURS
+        :return:
+        """
         self.selected = newSelected
         for text in self.playertexts:
             text.change_outline_color((255, 255, 255))
         self.playertexts[self.selected].change_outline_color((0, 128, 0))
 
     def draw(self):
+        """
+        Draws the text using the OulinedText classes draw method
+        :return:
+        """
         self.Player1.draw()
         self.Player2.draw()
 
 
 class Board:
     def __init__(self):
+        """
+        Defines board class
+        """
         self.vector = pygame.math.Vector2(0, 0)
         self.width = 9  # Width is number of squares
         self.boxWidth = 70    # Box width is how wide the squares are
@@ -162,6 +176,10 @@ class Board:
         self.squares = {}
 
     def draw(self):
+        """
+        Runs calculations for drawing squares, in a grid pattern
+        :return:
+        """
         if not self.ranCalc:
             row, column = 0, 0
             colors = [(212, 190, 167), (107, 70, 61)]
@@ -187,38 +205,108 @@ class Board:
                 pygame.draw.rect(win, self.squares[key][0], self.squares[key][1])
 
     def generateMoveSquares(self, column: float, row: float, yoffset: int, masterPiece):
-        """Generates green squares with a y offset depending on the type of piece, when given the position of the piece"""
+        """
+        Generates the squares that the piece can move to
+        :param column:
+        :param row:
+        :param yoffset:
+        :param masterPiece:
+        :return:
+        """
         posRight = pygame.math.Vector2(column + 1, row + yoffset)
         posLeft = pygame.math.Vector2(column - 1, row + yoffset)
         right = pygame.Rect(posRight.x * self.boxWidth + self.xoffset, posRight.y * self.boxWidth + self.yoffset, self.boxWidth, self.boxWidth)
         left = pygame.Rect(posLeft.x * self.boxWidth + self.xoffset, posLeft.y * self.boxWidth + self.yoffset, self.boxWidth, self.boxWidth)
-        selectedSquares.append(SelectedSquare(right, posRight, masterPiece))
-        selectedSquares.append(SelectedSquare(left, posLeft, masterPiece))
+        selectedSquares.append(SelectedSquare(right, posRight, masterPiece, "right"))
+        selectedSquares.append(SelectedSquare(left, posLeft, masterPiece, "left"))
 
 
 class SelectedSquare:
-    def __init__(self, rect: pygame.Rect, pos: Vector2, master):
+    def __init__(self, rect: pygame.Rect, pos: Vector2, master, type):
+        """
+        Square for the selected positons a place can move to
+        :param rect:
+        :param pos:
+        :param master:
+        :param type:
+        """
         self.rect = rect
         self.color = (0, 128, 0)
         self.master = master
         self.pos = pos
 
+        self.destroy = None
+
+        self.type = type
+
     def draw(self):
+        """
+        Checks whether it can destroy the piece it lies on and draws itself
+        :return:
+        """
+        self.checkIfDestroy()
         pygame.draw.rect(win, self.color, self.rect)
 
+    def resetRect(self):
+        """
+        Resets the .rect attribute to move the square to the proper position
+        :return:
+        """
+        self.rect.x = self.pos.x * mainBoard.boxWidth + mainBoard.xoffset
+        self.rect.y = self.pos.y * mainBoard.boxWidth + mainBoard.yoffset
+
+    def checkIfDestroy(self):
+        """
+        Iterates over every piece in Pieces and if collides with any, that aren't the same
+        type, will move self
+        :return:
+        """
+        for piece in Pieces:
+            if self.rect.colliderect(piece.rect):
+                if piece.color != self.master.color:
+                    self.destroy = piece.rect
+                    # This code should be refactored
+                    if self.type == "right":
+                        self.pos.x += 1
+                    else:
+                        self.pos.x -= 1
+
+                    if PIECE_COLORS.index(self.master.color) == 0:
+                        self.pos.y -= 1
+                    else:
+                        self.pos.y += 1
+
+                    self.resetRect()
+
     def detectPress(self, mousepos: Vector2):
-        global selectedSquares, scoreboard
+        """
+        Runs code to move piece, and disable all pieces, as well as removes piece after
+        :param mousepos: Mouse position in pygame.math.Vector2 form
+        :return:
+        """
         if self.rect.collidepoint(mousepos.x, mousepos.y):
             self.master.pos = self.pos
             for piece in Pieces:
                 piece.clicked = False
             scoreboard.changeSelected(abs(self.master.type - 1))
             selectedSquares = []
+            if self.destroy != None:
+                for piece in Pieces:
+                    if piece.rect == self.destroy:
+                        Pieces.remove(piece)
 
 
 class GameController:
+    """
+    Wrapper for static methods that control global game events
+    """
     @staticmethod
     def GeneratePieces(board: Board):
+        """
+        Generates the pieces for both colors
+        :param board:
+        :return:
+        """
         posy = 0
         for space in range(board.width):
             Pieces.append(CheckersPiece(posy, space, board.boxWidth, (board.xoffset, board.yoffset), PIECE_COLORS[1]))
@@ -231,6 +319,11 @@ class GameController:
 
     @staticmethod
     def CheckClick(mousepos: pygame.Vector2):
+        """
+        Checks if the mouse is clicked on a piece and sets pieces .clicked value to True
+        :param mousepos:
+        :return:
+        """
         for piece in Pieces:
             if piece.rect.collidepoint(mousepos.x, mousepos.y):
                 piece.clicked = True
@@ -238,6 +331,15 @@ class GameController:
 
 class CheckersPiece:
     def __init__(self, row: int, column: int, stepsize: int, offsets: tuple[int, int], color: tuple[int, int, int], radius: int = 20):
+        """
+        Base class for all checkers pieces
+        :param row:
+        :param column:
+        :param stepsize:
+        :param offsets:
+        :param color:
+        :param radius:
+        """
         self.pos = pygame.math.Vector2(column, row)
         self.stepsize = stepsize
         self.offsets = offsets
@@ -252,6 +354,10 @@ class CheckersPiece:
         Pieces.append(self)
 
     def handleThings(self):
+        """
+        Generates move squares
+        :return:
+        """
         if self.clicked:
             if scoreboard.selected == PIECE_COLORS.index(self.color):
                 if PIECE_COLORS.index(self.color) == 0:
@@ -262,21 +368,34 @@ class CheckersPiece:
                 self.clicked = False
                 return
 
-
     def getMiddle(self) -> tuple[float, float]:
+        """
+        Gets the middle of the squares in an xy position, not row, column
+        Returns tuple of middle xy
+        :return: Middle xy position for a given square
+        """
         middlex = self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2)
         middley = (self.pos.y * self.stepsize + self.offsets[1]) + (self.stepsize / 2)
 
         return (middlex, middley)
 
     def draw(self):
+        """
+        Draws the Piece at the middle of the square
+        :return:
+        """
         middles = self.getMiddle()
         self.rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + self.rectoffsets[0], self.pos.y * self.stepsize + self.offsets[1] + self.rectoffsets[1], self.radius * 2, self.radius * 2)
         #pygame.draw.rect(win, self.color, self.rect)
         pygame.draw.circle(win, self.color, (middles[0], middles[1]), self.radius)
 
 
-def drawObjects(win):
+def drawObjects(win) -> None:
+    """
+    Draws objects on pygame.surface
+    :param win:
+    :return:
+    """
     win.fill(BACKGROUND_COLOR)
     mainBoard.draw()
     for piece in Pieces:
@@ -313,6 +432,3 @@ while run:
     drawObjects(win)
     for piece in Pieces:
         piece.handleThings()
-
-
-#{'8.08.0': [(7.0, 7.0), (9.0, 7.0)]}

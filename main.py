@@ -15,7 +15,7 @@ FRAMERATE = 60
 CLOCK = pygame.time.Clock()
 
 Pieces = []
-
+SelectedSquares = []
 
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Checkers")
@@ -55,6 +55,9 @@ class Board:
             for key in self.squares:
                 pygame.draw.rect(win, self.squares[key][0], self.squares[key][1])
 
+    def createSelectedSquares(self, checkersPiece):
+        SelectedSquares.append(SelectedSquare())
+
 
 class GameController:
     @staticmethod
@@ -70,61 +73,52 @@ class GameController:
             posy = abs(posy - 1)
 
     @staticmethod
-    def CheckDrag(mousepos: pygame.Vector2):
+    def CheckClicked(mousepos: pygame.Vector2):
         for piece in Pieces:
             if piece.rect.collidepoint(mousepos.x, mousepos.y):
-                piece.genPositions()
-                piece.dragging = True
+                piece.selected = True
+
+    @staticmethod
+    def DestroySelected():
+        SelectedSquares = []
 
 
 class CheckersPiece:
-    def __init__(self, row: int, column: int, stepsize: int, offsets: tuple[int, int], color: tuple[int, int, int], radius: int = 20):
-        self.pos = pygame.math.Vector2(column, row)
-        self.stepsize = stepsize
-        self.offsets = offsets
-        self.color = color
-        self.radius = radius
-        self.rectoffsets = [15, 15] # Offsets are x and y values
-        self.rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2), self.pos.y * self.stepsize + self.offsets[1]+ (self.stepsize / 2), self.radius * 2, self.radius * 2)
+    def __init__(self, row: int, column: int, stepsize: int, offsets: tuple[int, int], color: tuple[int, int, int], radius: float = 20):
+        self.pos: Vector2 = pygame.math.Vector2(column, row)
+        self.stepsize: int = stepsize
+        self.offsets: tuple[int, int] = offsets
+        self.color: tuple[int, int ,int] = color
+        self.radius: float = radius
+        self.rectoffsets: list[int, int] = [15, 15] # Offsets are x and y values
+        self.rect: pygame.Rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2), self.pos.y * self.stepsize + self.offsets[1]+ (self.stepsize / 2), self.radius * 2, self.radius * 2)
 
-        self.dragoffsets = [2, 2]     # Offsets are in rows and columns
-        self.dragging = False
-        self.startpos = pygame.math.Vector2()
-        self.availableSpots = []
+        self.selected: bool = False
 
         Pieces.append(self)
 
-    def handleDrag(self):
-        if self.dragging:
-            mousepos = pygame.mouse.get_pos()
-            self.pos.x = mousepos[0] // self.stepsize - self.dragoffsets[0]
-            self.pos.y = mousepos[1] // self.stepsize - self.dragoffsets[1]
-
     def getMiddle(self) -> tuple[float, float]:
-        middlex = self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2)
-        middley = (self.pos.y * self.stepsize + self.offsets[1]) + (self.stepsize / 2)
+        middlex: float = self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2)
+        middley: float = (self.pos.y * self.stepsize + self.offsets[1]) + (self.stepsize / 2)
 
-        return (middlex, middley)
+        return middlex, middley
 
-    def genPositions(self):
-        upleft = pygame.Vector2(self.startpos.x - 1, self.startpos.y - 1)
-        upright = pygame.Vector2(self.startpos.x + 1, self.startpos.y - 1)
-        self.availableSpots = [upleft.xy, upright.xy]
-        print(self.availableSpots)
-
-    def checkPosition(self):
-        if self.pos.x in (self.startpos.x - 1, self.startpos.x + 1):
-            if self.pos.y in (self.startpos.y - 1):
-                print("Valid move")
-        else:
-            self.pos.xy = self.startpos.xy
+    def handleSelected(self, board: Board):
+        if self.selected:
+            board.createSelectedSquares(self)
 
     def draw(self):
-        middles = self.getMiddle()
-        self.rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + self.rectoffsets[0], self.pos.y * self.stepsize + self.offsets[1] + self.rectoffsets[1], self.radius * 2, self.radius * 2)
-        #pygame.draw.rect(win, self.color, self.rect)
+        middles: tuple[float, float] = self.getMiddle()
+        self.rect: pygame.Rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + self.rectoffsets[0], self.pos.y * self.stepsize + self.offsets[1] + self.rectoffsets[1], self.radius * 2, self.radius * 2)
         pygame.draw.circle(win, self.color, (middles[0], middles[1]), self.radius)
 
+
+class SelectedSquare(CheckersPiece):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def clicked(self):
+        pass
 
 def drawObjects(win):
     win.fill(BACKGROUND_COLOR)
@@ -150,18 +144,6 @@ while run:
             pygame.quit()
             run = False
             sys.exit()
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            for piece in Pieces:
-                piece.dragging = False
-                piece.startpos = piece.pos
-                GameController.CheckDrag(pygame.Vector2(pygame.mouse.get_pos()))
-        if event.type == pygame.MOUSEBUTTONUP:
-            for piece in Pieces:
-                piece.checkPosition()
-                piece.dragging = False
-
-    for piece in Pieces:
-        piece.handleDrag()
 
     drawObjects(win)
 

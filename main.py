@@ -15,6 +15,7 @@ FRAMERATE = 60
 CLOCK = pygame.time.Clock()
 
 Pieces = []
+selectedSquares = []
 
 # Font initialization
 scoreboardFont = pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", 35)
@@ -132,22 +133,23 @@ class OutlinedText(object):
 class ScoreBoard:
     def __init__(self, font: pygame.font.Font):
         self.font = font
-        self.Player1 =OutlinedText("Player 1", (400, 60), 3, 35, win, foreground_color=(255, 255, 255), background_color=(255, 0, 0))
-        self.Player1Pos = pygame.math.Vector2(130, 60)
-        self.Player2 = self.font.render("Player 2", False, PIECE_COLORS[0])
-        self.Player2Pos = pygame.math.Vector2(620, 760)
+        self.Player1 = OutlinedText("Player 1", (140, 65), 3, 35, win, foreground_color=PIECE_COLORS[1], background_color=(255, 255, 255))
+        self.Player1Pos: Vector2 = pygame.math.Vector2(140, 65)
+        self.Player2 = OutlinedText("Player 2", (590, 760), 3, 35, win, foreground_color=PIECE_COLORS[0], background_color=(0, 128, 0))
+        self.Player2Pos: Vector2 = pygame.math.Vector2(620, 760)
 
-        self.pos = (pygame.math.Vector2(), pygame.math.Vector2())
-        #self.selectedMessage = self.font.render("Your Turn")
-        self.selected = 0
+        self.playertexts: tuple[OutlinedText, OutlinedText] = (self.Player1, self.Player2)
+        self.selected: int = 0
 
     def toggleSelected(self):
         self.selected = abs(self.selected - 1)
+        for text in self.playertexts:
+            text.change_outline_color((255, 255, 255))
+        self.playertexts[self.selected].change_outline_color((0, 128, 0))
 
     def draw(self):
-        #win.blit(self.Player1, self.Player1Pos)
-        #win.blit(self.Player2, self.Player2Pos)
         self.Player1.draw()
+        self.Player2.draw()
 
 
 class Board:
@@ -184,6 +186,33 @@ class Board:
             for key in self.squares:
                 pygame.draw.rect(win, self.squares[key][0], self.squares[key][1])
 
+    def generateMoveSquares(self, column: float, row: float, yoffset: int, masterPiece):
+        """Generates green squares with a y offset depending on the type of piece, when given the position of the piece"""
+        posRight = pygame.math.Vector2(column + 1, row + yoffset)
+        posLeft = pygame.math.Vector2(column - 1, row + yoffset)
+        right = pygame.Rect(posRight.x * self.boxWidth + self.xoffset, posRight.y * self.boxWidth + self.yoffset, self.boxWidth, self.boxWidth)
+        left = pygame.Rect(posLeft.x * self.boxWidth + self.xoffset, posLeft.y * self.boxWidth + self.yoffset, self.boxWidth, self.boxWidth)
+        selectedSquares.append(SelectedSquare(right, posRight, masterPiece))
+        selectedSquares.append(SelectedSquare(left, posLeft, masterPiece))
+
+
+class SelectedSquare:
+    def __init__(self, rect: pygame.Rect, pos: Vector2, master):
+        self.rect = rect
+        self.color = (0, 128, 0)
+        self.master = master
+        self.pos = pos
+
+    def draw(self):
+        pygame.draw.rect(win, self.color, self.rect)
+
+    def detectPress(self, mousepos: Vector2):
+        if self.rect.collidepoint(mousepos.x, mousepos.y):
+            self.master.pos = self.pos
+            for piece in Pieces:
+                piece.clicked = False
+            scoreboard.toggleSelected()
+            selectedSquares = []
 
 class GameController:
     @staticmethod
@@ -199,11 +228,10 @@ class GameController:
             posy = abs(posy - 1)
 
     @staticmethod
-    def CheckDrag(mousepos: pygame.Vector2):
+    def CheckClick(mousepos: pygame.Vector2):
         for piece in Pieces:
             if piece.rect.collidepoint(mousepos.x, mousepos.y):
-                piece.genPositions()
-                piece.dragging = True
+                piece.clicked = True
 
 
 class CheckersPiece:
@@ -216,37 +244,27 @@ class CheckersPiece:
         self.rectoffsets = [15, 15] # Offsets are x and y values
         self.rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2), self.pos.y * self.stepsize + self.offsets[1]+ (self.stepsize / 2), self.radius * 2, self.radius * 2)
 
-        self.dragoffsets = [2, 2]     # Offsets are in rows and columns
-        self.dragging = False
-        self.startpos = pygame.math.Vector2()
-        self.availableSpots = []
+        self.clicked = False
 
         Pieces.append(self)
 
-    def handleDrag(self):
-        if self.dragging:
-            mousepos = pygame.mouse.get_pos()
-            self.pos.x = mousepos[0] // self.stepsize - self.dragoffsets[0]
-            self.pos.y = mousepos[1] // self.stepsize - self.dragoffsets[1]
+    def handleThings(self):
+        if self.clicked:
+            if scoreboard.selected == PIECE_COLORS.index(self.color):
+                if PIECE_COLORS.index(self.color) == 0:
+                    mainBoard.generateMoveSquares(self.pos.x, self.pos.y, -1, self)
+                else:
+                    mainBoard.generateMoveSquares(self.pos.x, self.pos.y, 1, self)
+            else:
+                self.clicked = False
+                return
+
 
     def getMiddle(self) -> tuple[float, float]:
         middlex = self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2)
         middley = (self.pos.y * self.stepsize + self.offsets[1]) + (self.stepsize / 2)
 
         return (middlex, middley)
-
-    def genPositions(self):
-        upleft = pygame.Vector2(self.startpos.x - 1, self.startpos.y - 1)
-        upright = pygame.Vector2(self.startpos.x + 1, self.startpos.y - 1)
-        self.availableSpots = [upleft.xy, upright.xy]
-        print(self.availableSpots)
-
-    def checkPosition(self):
-        if self.pos.x in (self.startpos.x - 1, self.startpos.x + 1):
-            if self.pos.y in (self.startpos.y - 1):
-                print("Valid move")
-        else:
-            self.pos.xy = self.startpos.xy
 
     def draw(self):
         middles = self.getMiddle()
@@ -261,6 +279,8 @@ def drawObjects(win):
     for piece in Pieces:
         piece.draw()
     scoreboard.draw()
+    for square in selectedSquares:
+        square.draw()
     pygame.display.update()
 
 
@@ -280,18 +300,16 @@ while run:
             run = False
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            for piece in Pieces:
-                piece.dragging = False
-                piece.startpos = piece.pos
-                GameController.CheckDrag(pygame.Vector2(pygame.mouse.get_pos()))
-        if event.type == pygame.MOUSEBUTTONUP:
-            for piece in Pieces:
-                piece.checkPosition()
-                piece.dragging = False
+            for square in selectedSquares:
+                square.detectPress(Vector2(pygame.mouse.get_pos()))
+            selectedSquares = []
+            GameController.CheckClick(Vector2(pygame.mouse.get_pos()))
 
-    for piece in Pieces:
-        piece.handleDrag()
+
 
     drawObjects(win)
+    for piece in Pieces:
+        piece.handleThings()
+
 
 #{'8.08.0': [(7.0, 7.0), (9.0, 7.0)]}

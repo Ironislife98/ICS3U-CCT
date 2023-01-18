@@ -226,10 +226,10 @@ class Board:
             selectedSquares.append(SelectedSquare(right, posRight, masterPiece, "right"))
             selectedSquares.append(SelectedSquare(left, posLeft, masterPiece, "left"))
         else:
-            posRightup = pygame.math.Vector2(column + 1, row + 1)
-            posLeftup = pygame.math.Vector2(column - 1, row + 1)
-            posRightdown = pygame.math.Vector2(column + 1, row - 1)
-            posLeftdown = pygame.math.Vector2(column - 1, row - 1)
+            posRightup = pygame.math.Vector2(column + 1, row + yoffset)
+            posLeftup = pygame.math.Vector2(column - 1, row + yoffset)
+            posRightdown = pygame.math.Vector2(column + 1, row - yoffset)
+            posLeftdown = pygame.math.Vector2(column - 1, row - yoffset)
             right = pygame.Rect(posRightup.x * self.boxWidth + self.xoffset, posRightup.y * self.boxWidth + self.yoffset,
                                 self.boxWidth, self.boxWidth)
             left = pygame.Rect(posLeftup.x * self.boxWidth + self.xoffset, posLeftup.y * self.boxWidth + self.yoffset,
@@ -241,12 +241,12 @@ class Board:
                                self.boxWidth, self.boxWidth)
             selectedSquares.append(SelectedSquare(right, posRightup, masterPiece, "right"))
             selectedSquares.append(SelectedSquare(left, posLeftup, masterPiece, "left"))
-            selectedSquares.append(SelectedSquare(right, posRightdown, masterPiece, "right"))
-            selectedSquares.append(SelectedSquare(left, posLeftdown, masterPiece, "left"))
+            selectedSquares.append(SelectedSquare(right2, posRightdown, masterPiece, "right", king=True, yoffset=yoffset))
+            selectedSquares.append(SelectedSquare(left2, posLeftdown, masterPiece, "left", king=True, yoffset=yoffset))
 
 
 class SelectedSquare:
-    def __init__(self, rect: pygame.Rect, pos: Vector2, master, type):
+    def __init__(self, rect: pygame.Rect, pos: Vector2, master, type, king=False, yoffset=0):
         """
         Square for the selected positons a place can move to
         :param rect:
@@ -262,7 +262,11 @@ class SelectedSquare:
         self.destroy = None
 
         self.type = type
+        self.king = king
+        self.yoffset = yoffset
 
+        #if self.king:
+        #    self.color = (0, 0, 255)
     def draw(self):
         """
         Checks whether it can destroy the piece it lies on and draws itself
@@ -285,21 +289,34 @@ class SelectedSquare:
         type, will move self
         :return:
         """
+
+        if self.pos.x < 0 or self.pos.x >= mainBoard.width or self.pos.y < 0 or self.pos.y >= mainBoard.width:
+            self.rect.x = 100000
+            return
+
         for piece in Pieces:
             if self.rect.colliderect(piece.rect):
                 if piece.color != self.master.color:
                     self.destroy = piece.rect
                     if self.type == "right":
                         self.pos.x += 1
-                    else:
+                    if self.type == "left":
                         self.pos.x -= 1
 
-                    if PIECE_COLORS.index(self.master.color) == 0:
-                        self.pos.y -= 1
+                    if not self.king:
+                        if PIECE_COLORS.index(self.master.color) == 0:
+                            self.pos.y -= 1
+                        else:
+                            self.pos.y += 1
                     else:
-                        self.pos.y += 1
+                        self.pos.y -= self.yoffset
 
                     self.resetRect()
+                elif piece.color == self.master.color:
+                    self.rect.x += 100000       # Move x off the screen
+                if self.pos.x < 0 or self.pos.x >= mainBoard.width or self.pos.y < 0 or self.pos.y >= mainBoard.width:
+                    self.rect.x = 100000
+                    return
 
     def detectPress(self, mousepos: Vector2):
         """
@@ -372,7 +389,7 @@ class CheckersPiece:
         self.rectoffsets = [15, 15] # Offsets are x and y values
         self.rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2), self.pos.y * self.stepsize + self.offsets[1]+ (self.stepsize / 2), self.radius * 2, self.radius * 2)
 
-        self.king = True
+        self.king = False
         self.crownOffset = (4, 9)
 
         self.clicked = False
@@ -394,6 +411,17 @@ class CheckersPiece:
                 self.clicked = False
                 return
 
+    def determineKing(self):
+        if not self.king:
+            if PIECE_COLORS.index(self.color) == 0:
+                if self.pos.y == 0:
+                    self.king = True
+                    return
+            else:
+                if self.pos.y == mainBoard.width - 1:
+                    self.king = True
+                    return
+
     def getMiddle(self) -> tuple[float, float]:
         """
         Gets the middle of the squares in an xy position, not row, column
@@ -405,11 +433,13 @@ class CheckersPiece:
 
         return (middlex, middley)
 
+
     def draw(self):
         """
         Draws the Piece at the middle of the square
         :return:
         """
+        self.determineKing()
         middles = self.getMiddle()
         self.rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + self.rectoffsets[0], self.pos.y * self.stepsize + self.offsets[1] + self.rectoffsets[1], self.radius * 2, self.radius * 2)
         #pygame.draw.rect(win, self.color, self.rect)

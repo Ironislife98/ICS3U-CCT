@@ -265,6 +265,8 @@ class SelectedSquare:
         self.king = king
         self.yoffset = yoffset
 
+        self.moved = False
+
         #if self.king:
         #    self.color = (0, 0, 255)
     def draw(self):
@@ -296,27 +298,31 @@ class SelectedSquare:
 
         for piece in Pieces:
             if self.rect.colliderect(piece.rect):
-                if piece.color != self.master.color:
-                    self.destroy = piece.rect
-                    if self.type == "right":
-                        self.pos.x += 1
-                    if self.type == "left":
-                        self.pos.x -= 1
+                if not self.moved:
+                    if piece.color != self.master.color:
+                        self.destroy = piece.rect
+                        if self.type == "right":
+                            self.pos.x += 1
+                        if self.type == "left":
+                            self.pos.x -= 1
 
-                    if not self.king:
-                        if PIECE_COLORS.index(self.master.color) == 0:
-                            self.pos.y -= 1
+                        if not self.king:
+                            if PIECE_COLORS.index(self.master.color) == 0:
+                                self.pos.y -= 1
+                            else:
+                                self.pos.y += 1
                         else:
-                            self.pos.y += 1
-                    else:
-                        self.pos.y -= self.yoffset
+                            self.pos.y -= self.yoffset
 
-                    self.resetRect()
-                elif piece.color == self.master.color:
-                    self.rect.x += 100000       # Move x off the screen
-                if self.pos.x < 0 or self.pos.x >= mainBoard.width or self.pos.y < 0 or self.pos.y >= mainBoard.width:
-                    self.rect.x = 100000
-                    return
+                        self.resetRect()
+                        self.moved = True
+                    elif piece.color == self.master.color:
+                        self.rect.x += 100000       # Move x off the screen
+                    if self.pos.x < 0 or self.pos.x >= mainBoard.width or self.pos.y < 0 or self.pos.y >= mainBoard.width:
+                        self.rect.x = 100000
+                        return
+                else:
+                    self.rect.x = 10000
 
     def detectPress(self, mousepos: Vector2):
         """
@@ -324,6 +330,7 @@ class SelectedSquare:
         :param mousepos: Mouse position in pygame.math.Vector2 form
         :return:
         """
+        global selectedSquares
         if self.rect.collidepoint(mousepos.x, mousepos.y):
             self.master.pos = self.pos
             for piece in Pieces:
@@ -480,12 +487,12 @@ while run:
             run = False
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
+            for piece in Pieces:
+                piece.clicked = False
             for square in selectedSquares:
                 square.detectPress(Vector2(pygame.mouse.get_pos()))
             selectedSquares = []
             GameController.CheckClick(Vector2(pygame.mouse.get_pos()))
-
-
 
     drawObjects(win)
     for piece in Pieces:

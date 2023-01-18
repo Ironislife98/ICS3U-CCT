@@ -28,7 +28,7 @@ pygame.display.set_caption("Checkers")
 
 
 
-crownImage = pygame.image.load("data/images/crown.png").convert_alpha()
+crownImage = pygame.image.load("data/images/crown.png").convert_alpha()         # Convert to maximize fps
 crownImage = pygame.transform.scale_by(crownImage, .07)
 
 # Thanks to PoDuck for the object class
@@ -173,12 +173,12 @@ class Board:
         """
         Defines board class
         """
-        self.vector = pygame.math.Vector2(0, 0)
-        self.width = 9  # Width is number of squares
-        self.boxWidth = 70    # Box width is how wide the squares are
+        self.vector: Vector2 = pygame.math.Vector2(0, 0)
+        self.width: int = 9  # Width is number of squares
+        self.boxWidth: int= 70    # Box width is how wide the squares are
         self.xoffset, self.yoffset = 135, 120
-        self.ranCalc = False
-        self.squares = {}
+        self.ranCalc: bool = False
+        self.squares: dict = {}
 
     def draw(self):
         """
@@ -187,7 +187,7 @@ class Board:
         """
         if not self.ranCalc:
             row, column = 0, 0
-            colors = [(212, 190, 167), (107, 70, 61)]
+            colors = [(212, 190, 167), (107, 70, 61)]           # Colors for board
             colorselection = True
             for i in range(self.width * self.width):
                 pygame.draw.rect(win, colors[int(colorselection)],
@@ -299,7 +299,9 @@ class SelectedSquare:
         for piece in Pieces:
             if self.rect.colliderect(piece.rect):
                 if not self.moved:
-                    if piece.color != self.master.color:
+                    if piece.color == self.master.color:
+                        self.rect.x += 100000       # Move x off the screen
+                    elif piece.color != self.master.color:
                         self.destroy = piece.rect
                         if self.type == "right":
                             self.pos.x += 1
@@ -316,11 +318,7 @@ class SelectedSquare:
 
                         self.resetRect()
                         self.moved = True
-                    elif piece.color == self.master.color:
-                        self.rect.x += 100000       # Move x off the screen
-                    if self.pos.x < 0 or self.pos.x >= mainBoard.width or self.pos.y < 0 or self.pos.y >= mainBoard.width:
-                        self.rect.x = 100000
-                        return
+
                 else:
                     self.rect.x = 10000
 
@@ -331,6 +329,7 @@ class SelectedSquare:
         :return:
         """
         global selectedSquares
+        self.checkIfDestroy()
         if self.rect.collidepoint(mousepos.x, mousepos.y):
             self.master.pos = self.pos
             for piece in Pieces:
@@ -433,7 +432,7 @@ class CheckersPiece:
         """
         Gets the middle of the squares in an xy position, not row, column
         Returns tuple of middle xy
-        :return: Middle xy position for a given square
+        :return:  position for a given square
         """
         middlex = self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2)
         middley = (self.pos.y * self.stepsize + self.offsets[1]) + (self.stepsize / 2)
@@ -449,7 +448,7 @@ class CheckersPiece:
         self.determineKing()
         middles = self.getMiddle()
         self.rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + self.rectoffsets[0], self.pos.y * self.stepsize + self.offsets[1] + self.rectoffsets[1], self.radius * 2, self.radius * 2)
-        #pygame.draw.rect(win, self.color, self.rect)
+        #pygame.draw.rect(win, self.color, self.rect)       # Uncomment to show hitboxes of pieces
         pygame.draw.circle(win, self.color, (middles[0], middles[1]), self.radius)
         if self.king:
             win.blit(crownImage, (self.rect.x + self.crownOffset[0], self.rect.y + self.crownOffset[1]))

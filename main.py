@@ -18,6 +18,7 @@ Pieces = []
 
 selectedSquares = []
 
+
 # Font initialization
 scoreboardFont = pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", 35)
 
@@ -25,6 +26,10 @@ scoreboardFont = pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", 35)
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Checkers")
 
+
+
+crownImage = pygame.image.load("data/images/crown.png").convert_alpha()
+crownImage = pygame.transform.scale_by(crownImage, .07)
 
 # Thanks to PoDuck for the object class
 # Code can be found here: https://github.com/PoDuck/pygame_outlined_text
@@ -213,12 +218,31 @@ class Board:
         :param masterPiece:
         :return:
         """
-        posRight = pygame.math.Vector2(column + 1, row + yoffset)
-        posLeft = pygame.math.Vector2(column - 1, row + yoffset)
-        right = pygame.Rect(posRight.x * self.boxWidth + self.xoffset, posRight.y * self.boxWidth + self.yoffset, self.boxWidth, self.boxWidth)
-        left = pygame.Rect(posLeft.x * self.boxWidth + self.xoffset, posLeft.y * self.boxWidth + self.yoffset, self.boxWidth, self.boxWidth)
-        selectedSquares.append(SelectedSquare(right, posRight, masterPiece, "right"))
-        selectedSquares.append(SelectedSquare(left, posLeft, masterPiece, "left"))
+        if not masterPiece.king:
+            posRight = pygame.math.Vector2(column + 1, row + yoffset)
+            posLeft = pygame.math.Vector2(column - 1, row + yoffset)
+            right = pygame.Rect(posRight.x * self.boxWidth + self.xoffset, posRight.y * self.boxWidth + self.yoffset, self.boxWidth, self.boxWidth)
+            left = pygame.Rect(posLeft.x * self.boxWidth + self.xoffset, posLeft.y * self.boxWidth + self.yoffset, self.boxWidth, self.boxWidth)
+            selectedSquares.append(SelectedSquare(right, posRight, masterPiece, "right"))
+            selectedSquares.append(SelectedSquare(left, posLeft, masterPiece, "left"))
+        else:
+            posRightup = pygame.math.Vector2(column + 1, row + 1)
+            posLeftup = pygame.math.Vector2(column - 1, row + 1)
+            posRightdown = pygame.math.Vector2(column + 1, row - 1)
+            posLeftdown = pygame.math.Vector2(column - 1, row - 1)
+            right = pygame.Rect(posRightup.x * self.boxWidth + self.xoffset, posRightup.y * self.boxWidth + self.yoffset,
+                                self.boxWidth, self.boxWidth)
+            left = pygame.Rect(posLeftup.x * self.boxWidth + self.xoffset, posLeftup.y * self.boxWidth + self.yoffset,
+                               self.boxWidth, self.boxWidth)
+            right2 = pygame.Rect(posRightdown.x * self.boxWidth + self.xoffset,
+                                posRightdown.y * self.boxWidth + self.yoffset,
+                                self.boxWidth, self.boxWidth)
+            left2 = pygame.Rect(posLeftdown.x * self.boxWidth + self.xoffset, posLeftdown.y * self.boxWidth + self.yoffset,
+                               self.boxWidth, self.boxWidth)
+            selectedSquares.append(SelectedSquare(right, posRightup, masterPiece, "right"))
+            selectedSquares.append(SelectedSquare(left, posLeftup, masterPiece, "left"))
+            selectedSquares.append(SelectedSquare(right, posRightdown, masterPiece, "right"))
+            selectedSquares.append(SelectedSquare(left, posLeftdown, masterPiece, "left"))
 
 
 class SelectedSquare:
@@ -265,7 +289,6 @@ class SelectedSquare:
             if self.rect.colliderect(piece.rect):
                 if piece.color != self.master.color:
                     self.destroy = piece.rect
-                    # This code should be refactored
                     if self.type == "right":
                         self.pos.x += 1
                     else:
@@ -349,6 +372,9 @@ class CheckersPiece:
         self.rectoffsets = [15, 15] # Offsets are x and y values
         self.rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2), self.pos.y * self.stepsize + self.offsets[1]+ (self.stepsize / 2), self.radius * 2, self.radius * 2)
 
+        self.king = True
+        self.crownOffset = (4, 9)
+
         self.clicked = False
 
         Pieces.append(self)
@@ -388,6 +414,8 @@ class CheckersPiece:
         self.rect = pygame.Rect(self.pos.x * self.stepsize + self.offsets[0] + self.rectoffsets[0], self.pos.y * self.stepsize + self.offsets[1] + self.rectoffsets[1], self.radius * 2, self.radius * 2)
         #pygame.draw.rect(win, self.color, self.rect)
         pygame.draw.circle(win, self.color, (middles[0], middles[1]), self.radius)
+        if self.king:
+            win.blit(crownImage, (self.rect.x + self.crownOffset[0], self.rect.y + self.crownOffset[1]))
 
 
 def drawObjects(win) -> None:

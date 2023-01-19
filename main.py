@@ -7,6 +7,7 @@ import sys
 pygame.init()
 pygame.font.init()
 
+
 WIDTH, HEIGHT = 900, 900
 BACKGROUND_COLOR = (34, 34, 34) #(44,42,42)
 PIECE_COLORS: tuple[tuple[int, int, int], tuple[int, int, int]] = ((209,178,129), (20,22,22))
@@ -21,15 +22,6 @@ selectedSquares = []
 
 # Font initialization
 scoreboardFont = pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", 35)
-
-
-win = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Checkers")
-
-
-
-crownImage = pygame.image.load("data/images/crown.png").convert_alpha()         # Convert to maximize fps
-crownImage = pygame.transform.scale_by(crownImage, .07)
 
 # Thanks to PoDuck for the object class
 # Code can be found here: https://github.com/PoDuck/pygame_outlined_text
@@ -60,7 +52,7 @@ class OutlinedText(object):
         self.background = background_color
         self.outline_width = outline_width
         self.screen = screen
-        self.font = pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", 40)
+        self.font = pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", font_size)
         self.text_surface = self.font.render(self.text, True, self.foreground)
         self.text_outline_surface = self.font.render(self.text, True, self.background)
         # There is no good way to get an outline with pygame, so we draw
@@ -134,6 +126,49 @@ class OutlinedText(object):
             )
         # blit foreground image to the screen
         self.screen.blit(self.text_surface, self.position)
+
+win = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Checkers")
+
+
+class TitleScreen:
+    def __init__(self):
+        self.title = OutlinedText("Multiplayer Checkers", (100, 200), 4, 50, win, background_color=(255, 0, 0))
+
+    def draw(self):
+        win.fill(BACKGROUND_COLOR)
+        self.title.draw()
+
+        pygame.display.update()
+
+titleScreen = TitleScreen()
+
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+            break
+    titleScreen.draw()
+
+"""
+DEFAULT_SETTINGS = {
+    "ran": False,
+    
+}
+try:
+    os.mkdir("data/saves")
+except FileExistsError:
+    pass
+
+try:
+    open("data/saves/settings.json")
+except FileNotFoundError:
+    with open("data/saves/settings.json", "w+") as f:
+        f.write(json.dump())"""
+
+crownImage = pygame.image.load("data/images/crown.png").convert_alpha()         # Convert to maximize fps
+crownImage = pygame.transform.scale_by(crownImage, .07)
 
 
 class ScoreBoard:

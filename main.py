@@ -23,6 +23,13 @@ selectedSquares = []
 # Font initialization
 scoreboardFont = pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", 35)
 
+win = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Checkers")
+
+
+crownImage = pygame.image.load("data/images/crown.png").convert_alpha()         # Convert to maximize fps
+crownImage = pygame.transform.scale_by(crownImage, .07)
+
 # Thanks to PoDuck for the object class
 # Code can be found here: https://github.com/PoDuck/pygame_outlined_text
 class OutlinedText(object):
@@ -469,6 +476,7 @@ class CheckersPiece:
         Returns tuple of middle xy
         :return:  position for a given square
         """
+
         middlex = self.pos.x * self.stepsize + self.offsets[0] + (self.stepsize / 2)
         middley = (self.pos.y * self.stepsize + self.offsets[1]) + (self.stepsize / 2)
 
@@ -531,3 +539,4 @@ while run:
     drawObjects(win)
     for piece in Pieces:
         piece.handleThings()
+

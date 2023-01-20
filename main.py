@@ -23,12 +23,15 @@ selectedSquares = []
 # Font initialization
 scoreboardFont = pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", 35)
 
+<<<<<<< Updated upstream
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Checkers")
 
 
 crownImage = pygame.image.load("data/images/crown.png").convert_alpha()         # Convert to maximize fps
 crownImage = pygame.transform.scale_by(crownImage, .07)
+=======
+>>>>>>> Stashed changes
 
 # Thanks to PoDuck for the object class
 # Code can be found here: https://github.com/PoDuck/pygame_outlined_text
@@ -133,6 +136,7 @@ class OutlinedText(object):
             )
         # blit foreground image to the screen
         self.screen.blit(self.text_surface, self.position)
+
 
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Checkers")

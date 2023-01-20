@@ -23,15 +23,14 @@ selectedSquares = []
 # Font initialization
 scoreboardFont = pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", 35)
 
-<<<<<<< Updated upstream
+
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Checkers")
 
 
 crownImage = pygame.image.load("data/images/crown.png").convert_alpha()         # Convert to maximize fps
 crownImage = pygame.transform.scale_by(crownImage, .07)
-=======
->>>>>>> Stashed changes
+
 
 # Thanks to PoDuck for the object class
 # Code can be found here: https://github.com/PoDuck/pygame_outlined_text
@@ -144,11 +143,13 @@ pygame.display.set_caption("Checkers")
 
 class TitleScreen:
     def __init__(self):
-        self.title = OutlinedText("Multiplayer Checkers", (100, 200), 4, 50, win, background_color=(255, 0, 0))
+        self.title = OutlinedText("Checkers The Game!", (175, 200), 4, 50, win, background_color=(53, 53, 53))
+        self.subtitle = OutlinedText("Press Any Button To Start", (100, 300), 4, 50, win, background_color=(53, 53, 53))
 
     def draw(self):
-        win.fill(BACKGROUND_COLOR)
+        win.fill((100, 100, 100))
         self.title.draw()
+        self.subtitle.draw()
 
         pygame.display.update()
 
@@ -158,8 +159,12 @@ running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
             running = False
             break
+
     titleScreen.draw()
 
 """

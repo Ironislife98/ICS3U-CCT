@@ -32,6 +32,11 @@ crownImage = pygame.image.load("data/images/crown.png").convert_alpha()         
 crownImage = pygame.transform.scale_by(crownImage, .07)
 
 
+banner = pygame.image.load("data/images/red-banner-clipart-30-1356449513.png")
+banner = pygame.transform.scale_by(banner, .075)
+
+
+
 # Thanks to PoDuck for the object class
 # Code can be found here: https://github.com/PoDuck/pygame_outlined_text
 class OutlinedText(object):
@@ -143,13 +148,17 @@ pygame.display.set_caption("Checkers")
 
 class TitleScreen:
     def __init__(self):
-        self.title = OutlinedText("Checkers The Game!", (175, 200), 4, 50, win, background_color=(53, 53, 53))
-        self.subtitle = OutlinedText("Press Any Button To Start", (100, 300), 4, 50, win, background_color=(53, 53, 53))
+        self.title = OutlinedText("Checkers The Game!", (260, 130), 4, 35, win, background_color=(53, 53, 53))
+        #self.subtitle = OutlinedText("Click To Start!", (100, 300), 4, 50, win, background_color=(53, 53, 53))
 
     def draw(self):
-        win.fill((100, 100, 100))
+        win.fill(BACKGROUND_COLOR)
+        win.blit(banner, (150,100))
+        win.blit(pygame.transform.rotate(pygame.transform.scale_by(crownImage, 2), 20), (410, 70))
+
         self.title.draw()
-        self.subtitle.draw()
+
+        #self.subtitle.draw()
 
         pygame.display.update()
 

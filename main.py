@@ -34,9 +34,6 @@ crownImage = pygame.image.load("data/images/crown.png").convert_alpha()         
 crownImage = pygame.transform.scale_by(crownImage, .07)
 
 
-banner = pygame.image.load("data/images/red-banner-clipart-30-1356449513.png")
-banner = pygame.transform.scale_by(banner, .075)
-
 quitProgram = False
 
 
@@ -273,9 +270,6 @@ while running:
 
     titleScreen.draw()
 
-
-crownImage = pygame.image.load("data/images/crown.png").convert_alpha()         # Convert to maximize fps
-crownImage = pygame.transform.scale_by(crownImage, .07)
 
 
 class ScoreBoard:

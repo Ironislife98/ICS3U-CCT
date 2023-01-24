@@ -2,6 +2,8 @@ import pygame
 from pygame.math import Vector2
 import pygame.font
 import sys
+from typing import Callable
+import threading
 
 
 pygame.init()
@@ -35,6 +37,14 @@ crownImage = pygame.transform.scale_by(crownImage, .07)
 banner = pygame.image.load("data/images/red-banner-clipart-30-1356449513.png")
 banner = pygame.transform.scale_by(banner, .075)
 
+quitProgram = False
+
+
+# Invoke functions like unity
+def Invoke(func: Callable, delay: int):
+    start = threading.Timer(delay, func)
+    start.start()
+
 
 
 # Thanks to PoDuck for the object class
@@ -47,6 +57,7 @@ class OutlinedText(object):
             outline_width,
             font_size,
             screen,
+            font=pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", 35),
             foreground_color=(255, 255, 255),
             background_color=(0, 0, 0)
     ):
@@ -66,7 +77,7 @@ class OutlinedText(object):
         self.background = background_color
         self.outline_width = outline_width
         self.screen = screen
-        self.font = pygame.font.Font("data/fonts/Montserrat-ExtraBold.ttf", font_size)
+        self.font = font
         self.text_surface = self.font.render(self.text, True, self.foreground)
         self.text_outline_surface = self.font.render(self.text, True, self.background)
         # There is no good way to get an outline with pygame, so we draw
@@ -146,21 +157,104 @@ win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Checkers")
 
 
-class TitleScreen:
-    def __init__(self):
-        self.title = OutlinedText("Checkers The Game!", (260, 130), 4, 35, win, background_color=(53, 53, 53))
-        #self.subtitle = OutlinedText("Click To Start!", (100, 300), 4, 50, win, background_color=(53, 53, 53))
+class Button:
+    """Base Class for buttons"""
+    def __init__(self, x: float, y: float, width: int, height: int, color: tuple[int, int, int], fill: int=100, round: int=40, delay: float = .3):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.color: tuple[int, int, int] = color
+        self.colorHover: tuple[int, int, int] = self.color
+        self.onClick = None
+        self.hover = False
+        self.fill: int = fill
+        self.round: int = round
+        self.delay: float = delay
+
+    def setColorOnHover(self, color):
+        """
+        Sets color when mouse hovers over button
+        :param color: rgb(r, g, b)
+        :return:
+        """
+        # Returns self to do some js syntax stuff
+        self.colorHover = color
+        return self
+
+    def setOnClick(self, func: Callable):
+        """
+        Defines action when clicked
+        :param func:
+        :return:
+        """
+        # Returns self to do some js syntax stuff
+        self.onClick = func
+        return self
+
+    """ "Private" functions """
+    def _getHover(self):
+        """
+        Checks if mouse is over button and sets hover accordingly
+        :return:
+        """
+        mousepos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mousepos):
+            self.hover =True
+        else:
+            self.hover = False
+
+    def _getPressed(self):
+        """
+        Checks if right mouse button is pressed and checks mouse pos
+        :return:
+        """
+        mousepos = pygame.mouse.get_pos()
+        if pygame.mouse.get_pressed(3)[0]:
+            if self.rect.collidepoint(mousepos):
+                Invoke(self.onClick, self.delay)
 
     def draw(self):
+        self._getHover()
+        self._getPressed()
+        if self.hover:
+            pygame.draw.rect(win, self.colorHover, self.rect, self.fill, self.round)
+        else:
+            pygame.draw.rect(win, self.color, self.rect, self.fill, self.round)
+
+
+class TitleScreen:
+    def __init__(self) -> None:
+        self.font = pygame.font.Font("data/fonts/BebasNeue-Regular.ttf", 70)
+        self.smallfont = pygame.font.Font("data/fonts/BebasNeue-Regular.ttf", 45)
+        self.title = OutlinedText("Checkers The Game!", (240, 300), 4, 70, win, font=self.font, foreground_color=(180, 28, 28),background_color=(0, 0, 0))
+        self.playText = OutlinedText("2 Players", (380, 425), 4, 30, win, font=self.smallfont, background_color=(0, 0, 0))
+        self.playButton = Button(350, 400, 200, 100, (60, 60, 60), round=10)
+        self.playButton\
+            .setOnClick(self.doExit)\
+            .setColorOnHover((80, 80, 80))       # Love the javascript syntax
+
+        self.exitText = OutlinedText("Quit", (420, 550), 4, 30, win, font=self.smallfont,
+                                     background_color=(0, 0, 0))
+        self.exitButton = Button(350, 525, 200, 100, (60, 60, 60), round=10, delay=0)
+        self.exitButton.setOnClick(self.quit).setColorOnHover((80, 80, 80))
+        self.exit = False
+
+    def quit(self):
+        global quitProgram
+        quitProgram = True
+
+    def doExit(self) -> None:
+        self.exit = True
+
+    def draw(self) -> None:
         win.fill(BACKGROUND_COLOR)
-        win.blit(banner, (150,100))
-        win.blit(pygame.transform.rotate(pygame.transform.scale_by(crownImage, 2), 20), (410, 70))
 
         self.title.draw()
-
-        #self.subtitle.draw()
+        self.playButton.draw()
+        self.playText.draw()
+        self.exitButton.draw()
+        self.exitText.draw()
 
         pygame.display.update()
+
 
 titleScreen = TitleScreen()
 
@@ -170,27 +264,15 @@ while running:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            running = False
-            break
+    if titleScreen.exit:
+        running = False
+        break
+    if quitProgram:
+        pygame.quit()
+        sys.exit()
 
     titleScreen.draw()
 
-"""
-DEFAULT_SETTINGS = {
-    "ran": False,
-    
-}
-try:
-    os.mkdir("data/saves")
-except FileExistsError:
-    pass
-
-try:
-    open("data/saves/settings.json")
-except FileNotFoundError:
-    with open("data/saves/settings.json", "w+") as f:
-        f.write(json.dump())"""
 
 crownImage = pygame.image.load("data/images/crown.png").convert_alpha()         # Convert to maximize fps
 crownImage = pygame.transform.scale_by(crownImage, .07)

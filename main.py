@@ -4,6 +4,7 @@ import pygame.font
 import sys
 from typing import Callable
 import threading
+import time
 
 
 pygame.init()
@@ -271,7 +272,6 @@ while running:
     titleScreen.draw()
 
 
-
 class ScoreBoard:
     def __init__(self, font: pygame.font.Font):
         """Initalize the Scoreboard"""
@@ -488,20 +488,20 @@ class GameController:
     Wrapper for static methods that control global game events
     """
     @staticmethod
-    def GeneratePieces(board: Board):
+    def GeneratePieces():
         """
         Generates the pieces for both colors
         :param board:
         :return:
         """
         posy = 0
-        for space in range(board.width):
-            Pieces.append(CheckersPiece(posy, space, board.boxWidth, (board.xoffset, board.yoffset), PIECE_COLORS[1]))
+        for space in range(mainBoard.width):
+            Pieces.append(CheckersPiece(posy, space, mainBoard.boxWidth, (mainBoard.xoffset, mainBoard.yoffset), PIECE_COLORS[1]))
             posy = abs(posy - 1)
 
         posy = 0
-        for space in range(board.width):
-            Pieces.append(CheckersPiece(board.width - posy - 1, space, board.boxWidth, (board.xoffset, board.yoffset), PIECE_COLORS[0]))
+        for space in range(mainBoard.width):
+            Pieces.append(CheckersPiece(mainBoard.width - posy - 1, space, mainBoard.boxWidth, (mainBoard.xoffset, mainBoard.yoffset), PIECE_COLORS[0]))
             posy = abs(posy - 1)
 
     @staticmethod
@@ -611,6 +611,31 @@ class CheckersPiece:
             win.blit(crownImage, (self.rect.x + self.crownOffset[0], self.rect.y + self.crownOffset[1]))
 
 
+class EndScreen:
+    def __init__(self):
+        self.hidden = False
+        self.font = pygame.font.Font("data/fonts/BebasNeue-Regular.ttf", 70)
+        self.smallfont = pygame.font.Font("data/fonts/BebasNeue-Regular.ttf", 45)
+        self.backgroundRect = pygame.Rect(100, 200, 700, 400)
+        self.retryText = OutlinedText("Play Again", (250, 475), 0, 35, win, self.smallfont)
+        self.retryButton = Button(225, 450, 200, 100, (70, 70, 70), round=10)
+        self.retryButton\
+            .setOnClick(GameController.GeneratePieces)\
+            .setColorOnHover((80, 80, 80))
+        self.quitButton = Button(475, 450, 200, 100, (70, 70, 70), round=10)
+        self.quitButton\
+            .setOnClick(GameController.GeneratePieces)\
+            .setColorOnHover((80, 80, 80))
+
+    def draw(self):
+        if not self.hidden:
+            pygame.draw.rect(win, (60, 60, 60), self.backgroundRect)
+            self.retryButton.draw()
+            self.retryText.draw()
+            self.quitButton.draw()
+
+
+
 def drawObjects(win) -> None:
     """
     Draws objects on pygame.surface
@@ -624,18 +649,22 @@ def drawObjects(win) -> None:
     scoreboard.draw()
     for square in selectedSquares:
         square.draw()
+    endScreen.draw()
     pygame.display.update()
+
 
 
 scoreboard = ScoreBoard(font=scoreboardFont)
 mainBoard = Board()
 
-GameController.GeneratePieces(mainBoard)
+GameController.GeneratePieces()
+endScreen = EndScreen()
 
 run = True
 
-
+start = time.time()
 while run:
+    dt = time.time() - start
     CLOCK.tick(FRAMERATE)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -655,6 +684,7 @@ while run:
         piece.handleThings()
 
     if GameController.CheckWinCases():
-        pygame.quit()
         run = False
-        sys.exit()
+        break
+
+

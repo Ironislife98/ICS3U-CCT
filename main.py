@@ -510,6 +510,21 @@ class GameController:
             if piece.rect.collidepoint(mousepos.x, mousepos.y):
                 piece.clicked = True
 
+    @staticmethod
+    def CheckWinCases() -> bool:
+        """
+        Game ends when there is only one color on the board.
+        If one color is on board, return True
+        :return:
+        """
+        types = []
+        for piece in Pieces:
+            if piece.color not in types:
+                types.append(piece.color)
+        if len(types) == 1:
+            return True
+        return False
+
 
 class CheckersPiece:
     def __init__(self, row: int, column: int, stepsize: int, offsets: tuple[int, int], color: tuple[int, int, int], radius: int = 20):
@@ -634,3 +649,7 @@ while run:
     for piece in Pieces:
         piece.handleThings()
 
+    if GameController.CheckWinCases():
+        pygame.quit()
+        run = False
+        sys.exit()

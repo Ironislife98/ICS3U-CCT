@@ -428,6 +428,7 @@ class SelectedSquare:
         :return:
         """
 
+        # Check before to check and not compute for all pieces
         if self.pos.x < 0 or self.pos.x >= mainBoard.width or self.pos.y < 0 or self.pos.y >= mainBoard.width:
             self.rect.x = 100000
             return
@@ -455,6 +456,10 @@ class SelectedSquare:
                         self.resetRect()
                         self.moved = True
 
+                    # Redo to check after piece has moved
+                    if self.pos.x < 0 or self.pos.x >= mainBoard.width or self.pos.y < 0 or self.pos.y >= mainBoard.width:
+                        self.rect.x = 100000
+                        return
                 else:
                     self.rect.x = 10000
 

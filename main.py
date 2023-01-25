@@ -1,3 +1,8 @@
+import os
+
+# Auto install correct pygame version
+os.system("pip install -r requirements.txt >NUL > NUL")
+
 import pygame
 from pygame.math import Vector2
 import pygame.font
@@ -5,6 +10,24 @@ import sys
 from typing import Callable
 import threading
 import time
+
+
+"""
+Basic outline
+
+Draw board
+Draw Pieces
+Draw UI
+Make Pieces move to where movement square is when clicked
+If movement square collides with piece, move square and delete piece when clicked
+If reached the end, make a king
+If king, make movement squares in all directions
+End game when only one colour is on the board
+Show end or play again options
+
+"""
+
+
 
 
 pygame.init()

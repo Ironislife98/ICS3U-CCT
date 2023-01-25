@@ -1,6 +1,10 @@
 
 # ICS3U CCT
 
+![](https://img.shields.io/github/downloads/Ironislife98/ICS3U-CCT/total)
+![](https://img.shields.io/github/license/Ironislife98/ICS3U-CCT)
+![](https://img.shields.io/github/v/release/Ironislife98/ICS3U-CCT)
+
 This game is made for my course culminating task of the ICS3U course. It was made to demonstrate a through understanding of data structures and algorithms and their practical applications. As well as to demonstrate a through understanding of the Python language and more advanced object oriented programming (OOP) concepts
 
 

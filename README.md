@@ -30,6 +30,8 @@ A checker becomes a king when it has reached the end of the board on the opponen
 A king can move forward and backward, diagonally and jump diagonally with the same rules as
 a pawn checker. There is no limit to how many king checkers you can have.
 
+#### More rules [here](https://www.wikihow.com/Play-Checkers)
+
 
 ## Software Development Cycle
 

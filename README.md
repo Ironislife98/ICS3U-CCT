@@ -13,6 +13,24 @@ This game is made for my course culminating task of the ICS3U course. It was mad
 - [x] Menu UI
 - [x] Endless gameplay
 
+## Rules
+### Movement
+A pawn checker can only move one diagonal space forward, towards your opponents checkers.
+Once the player makes a move, the other player is allowed their move, and so on.
+
+### Jumping Checkers
+If your checker is in the diagonal space nearest to an opponents checker, you can jump and
+capture that checkers. To capture a checker, you move two diagonal spaces in the direction
+of the opponents checker you are attacking.
+#### Rules for jumping
+- The space on the other side your opponents checker must be empty
+
+### King Pieces
+A checker becomes a king when it has reached the end of the board on the opponents side.
+A king can move forward and backward, diagonally and jump diagonally with the same rules as
+a pawn checker. There is no limit to how many king checkers you can have.
+
+
 ## Software Development Cycle
 
 ### Problem Definition

@@ -571,7 +571,8 @@ class GameController:
         :return: color of winner and name
         """
         color = Pieces[0].color         # Can be any index in the list, use 0 because there will always be one
-        mappings = {PIECE_COLORS[0] : "Beige", PIECE_COLORS[1]: "Black"}
+        print(color)
+        mappings = {PIECE_COLORS[0] : "White", PIECE_COLORS[1]: "Black"}
         return color, mappings[color]
 
 
@@ -688,6 +689,8 @@ class EndScreen:
 
     def setHiddenFalse(self):
         self.hidden = False
+        results = GameController.getWinner()
+        self.mainText = OutlinedText(f"{results[1]} wins!", (375, 330), 0, 34, win, self.smallfont)
 
     def draw(self):
         if not self.hidden:

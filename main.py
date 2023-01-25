@@ -325,6 +325,8 @@ class Board:
             row, column = 0, 0
             colors = [(212, 190, 167), (107, 70, 61)]           # Colors for board
             colorselection = True
+            # Iterates through a row until reached the desired width, then goes down a row and does the same
+            # Draws pure rectangles at the position, multiples by the width of the boxes with a offset to make it bigger and in the middle
             for i in range(self.width * self.width):
                 pygame.draw.rect(win, colors[int(colorselection)],
                                  pygame.Rect(column * self.boxWidth + self.xoffset, row * self.boxWidth + self.yoffset, self.boxWidth, self.boxWidth))
@@ -355,6 +357,9 @@ class Board:
         :return:
         """
         if not masterPiece.king:
+            """
+            Essentially generating 2 'forward' squares for the piece
+            """
             posRight = pygame.math.Vector2(column + 1, row + yoffset)
             posLeft = pygame.math.Vector2(column - 1, row + yoffset)
             right = pygame.Rect(posRight.x * self.boxWidth + self.xoffset, posRight.y * self.boxWidth + self.yoffset, self.boxWidth, self.boxWidth)
@@ -362,6 +367,9 @@ class Board:
             selectedSquares.append(SelectedSquare(right, posRight, masterPiece, "right"))
             selectedSquares.append(SelectedSquare(left, posLeft, masterPiece, "left"))
         else:
+            """
+            Generating 2 'forward' pieces and 2 'backwards' pieces
+            """
             posRightup = pygame.math.Vector2(column + 1, row + yoffset)
             posLeftup = pygame.math.Vector2(column - 1, row + yoffset)
             posRightdown = pygame.math.Vector2(column + 1, row - yoffset)
@@ -489,11 +497,14 @@ class GameController:
     """
     @staticmethod
     def GeneratePieces():
+        global Pieces, scoreboard
         """
         Generates the pieces for both colors
         :param board:
         :return:
         """
+        Pieces = []
+        scoreboard.changeSelected(0)
         posy = 0
         for space in range(mainBoard.width):
             Pieces.append(CheckersPiece(posy, space, mainBoard.boxWidth, (mainBoard.xoffset, mainBoard.yoffset), PIECE_COLORS[1]))
@@ -529,6 +540,16 @@ class GameController:
         if len(types) == 1:
             return True
         return False
+
+    @staticmethod
+    def getWinner():
+        """
+        Can only be run when game is finished
+        :return: color of winner and name
+        """
+        color = Pieces[0].color         # Can be any index in the list, use 0 because there will always be one
+        mappings = {PIECE_COLORS[0] : "Beige", PIECE_COLORS[1]: "Black"}
+        return color, mappings[color]
 
 
 class CheckersPiece:
@@ -613,19 +634,37 @@ class CheckersPiece:
 
 class EndScreen:
     def __init__(self):
-        self.hidden = False
+        results = GameController.getWinner()
+
+
+        self.hidden = True
         self.font = pygame.font.Font("data/fonts/BebasNeue-Regular.ttf", 70)
         self.smallfont = pygame.font.Font("data/fonts/BebasNeue-Regular.ttf", 45)
         self.backgroundRect = pygame.Rect(100, 200, 700, 400)
+
+        self.mainText = OutlinedText(f"{results[1]} wins!", (375, 330), 0, 34, win, self.smallfont)
+
         self.retryText = OutlinedText("Play Again", (250, 475), 0, 35, win, self.smallfont)
         self.retryButton = Button(225, 450, 200, 100, (70, 70, 70), round=10)
         self.retryButton\
-            .setOnClick(GameController.GeneratePieces)\
+            .setOnClick(self.GeneratePieces)\
             .setColorOnHover((80, 80, 80))
+        self.quitText = OutlinedText("Quit", (550, 475), 0, 35, win, self.smallfont)
         self.quitButton = Button(475, 450, 200, 100, (70, 70, 70), round=10)
         self.quitButton\
-            .setOnClick(GameController.GeneratePieces)\
+            .setOnClick(self.exit)\
             .setColorOnHover((80, 80, 80))
+
+    def GeneratePieces(self):
+        self.hidden = True
+        GameController.GeneratePieces()
+
+    def exit(self):
+        global quitProgram
+        quitProgram = True
+
+    def setHiddenFalse(self):
+        self.hidden = False
 
     def draw(self):
         if not self.hidden:
@@ -633,7 +672,8 @@ class EndScreen:
             self.retryButton.draw()
             self.retryText.draw()
             self.quitButton.draw()
-
+            self.quitText.draw()
+            self.mainText.draw()
 
 
 def drawObjects(win) -> None:
@@ -652,6 +692,11 @@ def drawObjects(win) -> None:
     endScreen.draw()
     pygame.display.update()
 
+def safeQuit():
+    global run
+    pygame.quit()
+    run = False
+    sys.exit()
 
 
 scoreboard = ScoreBoard(font=scoreboardFont)
@@ -668,9 +713,7 @@ while run:
     CLOCK.tick(FRAMERATE)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            run = False
-            sys.exit()
+            safeQuit()
         if event.type == pygame.MOUSEBUTTONDOWN:
             for piece in Pieces:
                 piece.clicked = False
@@ -684,7 +727,7 @@ while run:
         piece.handleThings()
 
     if GameController.CheckWinCases():
-        run = False
-        break
+        Invoke(endScreen.setHiddenFalse, 1)
 
-
+    if quitProgram:
+        safeQuit()
